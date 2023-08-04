@@ -1,0 +1,70 @@
+FROM ubuntu:16.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN sed -i 's/# deb-src/deb-src/' /etc/apt/sources.list
+RUN apt-get update && apt-get upgrade -y
+
+RUN apt-get build-dep -y qemu
+
+# FirmAFL Deps
+RUN apt-get install -y \
+    automake \
+    binutils-dev \
+    bison \
+    flex \
+    git \
+    libboost-all-dev \
+    libtool \
+    locales 
+
+# Firmadyne Deps
+RUN apt-get install -y \
+    busybox-static \
+    ca-certificates \
+    fakeroot \
+    dmsetup \
+    kpartx \
+    netcat-openbsd \
+    nmap \
+    python-psycopg2 \
+    python-pip \
+    python3-pip \ 
+    python3-psycopg2 \
+    snmp \
+    sudo \
+    uml-utilities \
+    util-linux \
+    vlan \
+    postgresql \
+    wget \
+    qemu-system-arm \
+    qemu-system-mips \
+    qemu-system-x86 \
+    qemu-utils \
+    unzip \
+    python-lzma \
+    multipath-tools
+
+# Create firmafl user
+#RUN useradd -m firmafl
+#RUN echo "firmafl:firmafl" | chpasswd && adduser firmafl sudo
+#
+#USER firmafl
+
+
+RUN locale-gen en_US.UTF-8
+
+ENV FIRMAFL_COMMIT=1cb62a3e418622a84b2ca6fdeaa5086ab41006cb
+ENV FIRMAFL_MODE=normal
+ENV PGPASSWORD=firmadyne
+ENV USER=root
+
+WORKDIR /workspaces/firmafl-repro
+COPY build.sh .
+RUN ./build.sh
+
+COPY extract_one.sh .
+COPY run_experiment.sh .
+
+ENTRYPOINT /bin/bash
